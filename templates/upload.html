@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <title>main</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .buttons {
+            margin-top: 20px;
+        }
+        button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Upload your .xes file here:</h1>
+    <form method="post" enctype="multipart/form-data">
+        <input type="file" name="file" required>
+        <button type="submit">upload</button>
+    </form>
+    {% if  filename %}
+    <h2>You can get result as:</h2>
+    <a href="{{ url_for('dfg', filename=filename) }}">
+        <button>DFG</button>
+    </a>
+    <a href="{{ url_for('petri_net', filename=filename) }}">
+        <button>Petri Net</button>
+    </a>
+    <a href="{{ url_for('bpmn', filename=filename) }}">
+        <button>BPMN</button>
+    </a>
+    {% endif %}
+</div>
+</body>
+</html>
