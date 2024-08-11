@@ -11,6 +11,7 @@
             height: 100vh;
             margin: 0;
             background-color: #f0f0f0;
+            flex-direction: column;
         }
         .container {
             text-align: center;
@@ -18,6 +19,7 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
         }
         .buttons {
             margin-top: 20px;
@@ -35,6 +37,10 @@
         button:hover {
             background-color: #0056b3;
         }
+        svg {
+            border: 1px solid #ccc;
+            margin-top: 20px;
+        }
 
     </style>
 </head>
@@ -43,9 +49,9 @@
     <h1>Upload your .xes file here:</h1>
     <form method="post" enctype="multipart/form-data">
         <input type="file" name="file" required>
-        <button type="submit">upload</button>
+        <button type="submit">Upload</button>
     </form>
-    {% if  filename %}
+    {% if filename %}
     <h2>You can get result as:</h2>
     <a href="{{ url_for('dfg', filename=filename) }}">
         <button>DFG</button>
@@ -58,5 +64,119 @@
     </a>
     {% endif %}
 </div>
+
+{% if nodes and links %}
+<div id="graph"></div>
+<svg width="1000" height="600"></svg>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+    const nodes = {{ nodes | tojson }};
+    const links = {{ links | tojson }};
+
+    const svg = d3.select("svg"),
+          width = +svg.attr("width"),
+          height = +svg.attr("height");
+
+    svg.append("defs").append("marker")
+        .attr("id", "arrowhead")
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 15)
+        .attr("refY", 0)
+        .attr("orient", "auto")
+        .attr("markerWidth", 10)
+        .attr("markerHeight", 10)
+        .append("path")
+        .attr("d", "M 0,-5 L 10,0 L 0,5")
+        .attr("class", "arrowhead");
+
+    const simulation = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id(d => d.id).distance(100))
+        .force("charge", d3.forceManyBody().strength(-300))
+        .force("center", d3.forceCenter(width / 2, height / 2));
+
+    const link = svg.append("g")
+        .attr("class", "links")
+        .selectAll("line")
+        .data(links)
+        .enter().append("line")
+        .attr("class", "link")
+        .attr("stroke-width", d => Math.sqrt(d.frequency))
+        .attr("marker-end", "url(#arrowhead)");
+
+    const node = svg.append("g")
+        .attr("class", "nodes")
+        .selectAll("g")
+        .data(nodes)
+        .enter().append("g")
+        .attr("class", d => {
+            if (d.id === 'START') return "node start-node";
+            if (d.id === 'END') return "node end-node";
+            return "node";
+        })
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended));
+
+    node.filter(d => d.id === 'START' || d.id === 'END')
+        .append("circle")
+        .attr("r", 30);
+
+    node.filter(d => d.id !== 'START' && d.id !== 'END')
+        .append("rect")
+        .attr("x", -50)
+        .attr("y", -25)
+        .attr("width", 100)
+        .attr("height", 50)
+        .attr("fill", d => d.color || "#69b3a2"); // تغییر رنگ بر اساس ویژگی رنگ گره
+
+
+    node.append("text")
+        .attr("dy", 4)
+        .text(d => d.id);
+
+    const linkLabels = svg.append("g")
+        .attr("class", "link-labels")
+        .selectAll("text")
+        .data(links)
+        .enter().append("text")
+        .attr("dy", 15)
+        .attr("text-anchor", "middle")
+        .text(d => d.frequency);
+
+    simulation.on("tick", () => {
+        link
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+
+        node
+            .attr("transform", d => `translate(${d.x},${d.y})`);
+
+        linkLabels
+            .attr("x", d => (d.source.x + d.target.x) / 2)
+            .attr("y", d => (d.source.y + d.target.y) / 2);
+    });
+
+    function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+    }
+
+    function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+    }
+
+    function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+    }
+
+</script>
+{% endif %}
 </body>
 </html>
