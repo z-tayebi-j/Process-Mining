@@ -63,120 +63,19 @@
         <button>BPMN</button>
     </a>
     {% endif %}
+    {% if plot_url %}
+    <div class="chart">
+        <h2>Event Frequencies:</h2>
+        <img src="data:image/png;base64,{{ plot_url }}" alt="Event Frequencies Chart">
+    </div>
+    <div>
+        <ul>
+            {% for event, count in data.items() %}
+            <li>{{ event }}: {{ count }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
 </div>
-
-{% if nodes and links %}
-<div id="graph"></div>
-<svg width="1000" height="600"></svg>
-<script src="https://d3js.org/d3.v7.min.js"></script>
-<script>
-    const nodes = {{ nodes | tojson }};
-    const links = {{ links | tojson }};
-
-    const svg = d3.select("svg"),
-          width = +svg.attr("width"),
-          height = +svg.attr("height");
-
-    svg.append("defs").append("marker")
-        .attr("id", "arrowhead")
-        .attr("viewBox", "0 -5 10 10")
-        .attr("refX", 15)
-        .attr("refY", 0)
-        .attr("orient", "auto")
-        .attr("markerWidth", 10)
-        .attr("markerHeight", 10)
-        .append("path")
-        .attr("d", "M 0,-5 L 10,0 L 0,5")
-        .attr("class", "arrowhead");
-
-    const simulation = d3.forceSimulation(nodes)
-        .force("link", d3.forceLink(links).id(d => d.id).distance(100))
-        .force("charge", d3.forceManyBody().strength(-300))
-        .force("center", d3.forceCenter(width / 2, height / 2));
-
-    const link = svg.append("g")
-        .attr("class", "links")
-        .selectAll("line")
-        .data(links)
-        .enter().append("line")
-        .attr("class", "link")
-        .attr("stroke-width", d => Math.sqrt(d.frequency))
-        .attr("marker-end", "url(#arrowhead)");
-
-    const node = svg.append("g")
-        .attr("class", "nodes")
-        .selectAll("g")
-        .data(nodes)
-        .enter().append("g")
-        .attr("class", d => {
-            if (d.id === 'START') return "node start-node";
-            if (d.id === 'END') return "node end-node";
-            return "node";
-        })
-        .call(d3.drag()
-            .on("start", dragstarted)
-            .on("drag", dragged)
-            .on("end", dragended));
-
-    node.filter(d => d.id === 'START' || d.id === 'END')
-        .append("circle")
-        .attr("r", 30);
-
-    node.filter(d => d.id !== 'START' && d.id !== 'END')
-        .append("rect")
-        .attr("x", -50)
-        .attr("y", -25)
-        .attr("width", 100)
-        .attr("height", 50)
-        .attr("fill", d => d.color || "#69b3a2"); // تغییر رنگ بر اساس ویژگی رنگ گره
-
-
-    node.append("text")
-        .attr("dy", 4)
-        .text(d => d.id);
-
-    const linkLabels = svg.append("g")
-        .attr("class", "link-labels")
-        .selectAll("text")
-        .data(links)
-        .enter().append("text")
-        .attr("dy", 15)
-        .attr("text-anchor", "middle")
-        .text(d => d.frequency);
-
-    simulation.on("tick", () => {
-        link
-            .attr("x1", d => d.source.x)
-            .attr("y1", d => d.source.y)
-            .attr("x2", d => d.target.x)
-            .attr("y2", d => d.target.y);
-
-        node
-            .attr("transform", d => `translate(${d.x},${d.y})`);
-
-        linkLabels
-            .attr("x", d => (d.source.x + d.target.x) / 2)
-            .attr("y", d => (d.source.y + d.target.y) / 2);
-    });
-
-    function dragstarted(event, d) {
-        if (!event.active) simulation.alphaTarget(0.3).restart();
-        d.fx = d.x;
-        d.fy = d.y;
-    }
-
-    function dragged(event, d) {
-        d.fx = event.x;
-        d.fy = event.y;
-    }
-
-    function dragended(event, d) {
-        if (!event.active) simulation.alphaTarget(0);
-        d.fx = null;
-        d.fy = null;
-    }
-
-</script>
-{% endif %}
 </body>
 </html>

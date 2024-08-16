@@ -1,4 +1,8 @@
 import os
+import base64
+from io import BytesIO
+import pandas as pd
+from matplotlib import pyplot as plt
 from pm4py import read_xes
 import pm4py
 from flask import Flask, render_template, request, redirect, url_for
@@ -6,6 +10,7 @@ from flask import Flask, render_template, request, redirect, url_for
 app = Flask(__name__)
 path = 'G:\\uni\\term8\\Project\\test\\Flask\\static\\uploads\\'
 filename_global = ''
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -22,39 +27,35 @@ def index():
             return redirect(url_for('index'))
     elif filename_global:
         log = pm4py.read_xes(path + filename_global)
-        dfg, start_activities, end_activities = pm4py.discover_dfg(log)
-        nodes = [{"id": act} for act in set(dfg.keys()).union(start_activities.keys()).union(end_activities.keys())]
-        links = [{"source": src, "target": tgt, "frequency": freq} for (src, tgt), freq in dfg.items()]
+        event_counts = pm4py.get_event_attribute_values(log, "concept:name")
 
-        # اضافه کردن گره شروع و پایان
-        nodes.append({"id": "START"})
-        nodes.append({"id": "END"})
+        events_df = pd.DataFrame(list(event_counts.items()), columns=['Event', 'Count'])
+        plt.figure(figsize=(5, 3))
+        plt.bar(events_df['Event'], events_df['Count'])
+        plt.xlabel('Event')
+        plt.ylabel('Count')
+        plt.title('Event Frequencies')
 
-        for act in start_activities:
-            links.append({"source": "START", "target": act, "frequency": start_activities[act]})
+        img = BytesIO()
+        plt.savefig(img, format='png')
+        img.seek(0)
+        plot_url = base64.b64encode(img.getvalue()).decode()
+        data = dict()
+        data['total events'] = len(log)
+        data['total cases'] = len(set(log['case:concept:name']))
+        data['total activities'] = len(set(log['concept:name']))
+        data['start time'] = min(log['time:timestamp'])
+        data['end time'] = max(log['time:timestamp'])
 
-        for act in end_activities:
-            links.append({"source": act, "target": "END", "frequency": end_activities[act]})
-
-        # ایجاد یک مجموعه از id های موجود در nodes
-        node_ids = {node['id'] for node in nodes}
-
-        # اطمینان حاصل کردن از وجود همه source و target ها در nodes
-        for link in links:
-            if link['source'] not in node_ids:
-                nodes.append({"id": link['source']})
-                print(f"Added missing node for source: {link['source']}")
-            if link['target'] not in node_ids:
-                nodes.append({"id": link['target']})
-                print(f"Added missing node for target: {link['target']}")
-
-        return render_template('upload.html', filename=filename_global, nodes=nodes, links=links)
+        return render_template('upload.html', filename=filename_global, plot_url=plot_url, data=data)
 
     return render_template('upload.html', filename=None, nodes=[], links=[])
+
 
 @app.route('/result/<filename>')
 def display_image(filename):
     return render_template('display.html', filename=filename)
+
 
 @app.route('/dfg/<filename>')
 def dfg(filename):
@@ -63,6 +64,7 @@ def dfg(filename):
     pm4py.save_vis_dfg(dfg, start_activities, end_activities, path + "dfg.png")
     return redirect(url_for('display_image', filename="dfg.png"))
 
+
 @app.route('/petri_net/<filename>')
 def petri_net(filename):
     log = pm4py.read_xes(path + filename)
@@ -70,12 +72,14 @@ def petri_net(filename):
     pm4py.save_vis_petri_net(petri, start_activities, end_activities, path + "petrinet.png")
     return redirect(url_for('display_image', filename="petrinet.png"))
 
+
 @app.route('/bpmn/<filename>')
 def bpmn(filename):
     log = pm4py.read_xes(path + filename)
     bpmn = pm4py.discover_bpmn_inductive(log)
     pm4py.save_vis_bpmn(bpmn, path + "bpmn.png")
     return redirect(url_for('display_image', filename="bpmn.png"))
+
 
 if __name__ == '__main__':
     if not os.path.exists('uploads'):
