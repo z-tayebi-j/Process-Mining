@@ -64,6 +64,36 @@ def dfg(filename):
     pm4py.save_vis_dfg(dfg, start_activities, end_activities, path + "dfg.png")
     return redirect(url_for('display_image', filename="dfg.png"))
 
+@app.route('/dfg2/<filename>')
+def dfg2(filename):
+    log = pm4py.read_xes(path + filename)
+    dfg, start_activities, end_activities = pm4py.discover_dfg(log)
+    nodes = [{"id": act} for act in set(dfg.keys()).union(start_activities.keys()).union(end_activities.keys())]
+    links = [{"source": src, "target": tgt, "frequency": freq} for (src, tgt), freq in dfg.items()]
+
+    # اضافه کردن گره شروع و پایان
+    nodes.append({"id": "START"})
+    nodes.append({"id": "END"})
+
+    for act in start_activities:
+        links.append({"source": "START", "target": act, "frequency": start_activities[act]})
+
+    for act in end_activities:
+        links.append({"source": act, "target": "END", "frequency": end_activities[act]})
+
+    # ایجاد یک مجموعه از id های موجود در nodes
+    node_ids = {node['id'] for node in nodes}
+
+    # اطمینان حاصل کردن از وجود همه source و target ها در nodes
+    for link in links:
+        if link['source'] not in node_ids:
+            nodes.append({"id": link['source']})
+            print(f"Added missing node for source: {link['source']}")
+        if link['target'] not in node_ids:
+            nodes.append({"id": link['target']})
+            print(f"Added missing node for target: {link['target']}")
+
+    return render_template('DFG.html', filename=filename, nodes=nodes, links=links)
 
 @app.route('/petri_net/<filename>')
 def petri_net(filename):
