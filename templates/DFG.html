@@ -5,6 +5,16 @@
     <title>DFG Visualization</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            flex-direction: column;
+        }
+
         .node circle {
             fill: #69b3a2;
             stroke: #000;
@@ -51,109 +61,130 @@
         const nodes = {{ nodes | tojson }};
         const links = {{ links | tojson }};
 
-    const svg = d3.select("svg"),
-          width = +svg.attr("width"),
-          height = +svg.attr("height");
-                // تعریف فلش‌ها برای جهت‌دار کردن یال‌ها
-                svg.append("defs").append("marker")
-                    .attr("id", "arrowhead")
-                    .attr("viewBox", "0 -5 10 10")
-                    .attr("refX", 15) // موقعیت فلش در انتهای یال
-                    .attr("refY", 0)
-                    .attr("orient", "auto")
-                    .attr("markerWidth", 10)
-                    .attr("markerHeight", 10)
-                    .append("path")
-                    .attr("d", "M 0,-5 L 10 ,0 L 0,5")
-                    .attr("class", "arrowhead");
+        const svg = d3.select("svg"),
+              width = +svg.attr("width"),
+              height = +svg.attr("height");
 
-                const simulation = d3.forceSimulation(nodes)
-                    .force("link", d3.forceLink(links).id(d => d.id).distance(100))
-                    .force("charge", d3.forceManyBody().strength(-300))
-                    .force("center", d3.forceCenter(width / 2, height / 2));
+        svg.append("defs").append("marker")
+            .attr("id", "arrowhead")
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", 20)
+            .attr("refY", 0)
+            .attr("orient", "auto")
+            .attr("markerWidth", 6)
+            .attr("markerHeight", 6)
+            .append("path")
+            .attr("d", "M 0,-5 L 10,0 L 0,5")
+            .attr("class", "arrowhead");
 
-                const link = svg.append("g")
-                    .attr("class", "links")
-                    .selectAll("line")
-                    .data(links)
-                    .enter().append("line")
-                    .attr("class", "link")
-                    .attr("stroke-width", d => Math.sqrt(d.frequency))
-                    .attr("marker-end", "url(#arrowhead)"); // اضافه کردن فلش به انتهای یال
+        const simulation = d3.forceSimulation(nodes)
+            .force("link", d3.forceLink(links).id(d => d.id).distance(100))
+            .force("charge", d3.forceManyBody().strength(-300))
+            .force("center", d3.forceCenter(width / 2, height / 2));
 
-                const node = svg.append("g")
-                    .attr("class", "nodes")
-                    .selectAll("g")
-                    .data(nodes)
-                    .enter().append("g")
-                    .attr("class", d => {
-                        if (d.id === 'START') return "node start-node";
-                        if (d.id === 'END') return "node end-node";
-                        return "node";
-                    })
-                    .call(d3.drag()
-                        .on("start", dragstarted)
-                        .on("drag", dragged)
-                        .on("end", dragended));
+        // تابع برای ایجاد منحنی‌های بزیه
+        const curvedLink = d3.linkHorizontal()
+            .x(d => d.x)
+            .y(d => d.y);
 
-                node.filter(d => d.id === 'START' || d.id === 'END')
-                    .append("circle")
-                    .attr("r", 30); // افزایش اندازه دایره‌ها برای شروع و پایان
-
-                node.filter(d => d.id !== 'START' && d.id !== 'END')
-                    .append("rect")
-                    .attr("x", -50)  // تنظیم مکان مستطیل نسبت به گره
-                    .attr("y", -25)
-                    .attr("width", 100)
-                    .attr("height", 50);
-
-                node.append("text")
-                    .attr("dy", 4) // تنظیم مکان متن داخل مستطیل
-                    .text(d => d.id);
-
-                // اضافه کردن وزن یال‌ها
-                const linkLabels = svg.append("g")
-                    .attr("class", "link-labels")
-                    .selectAll("text")
-                    .data(links)
-                    .enter().append("text")
-                    .attr("dy", 5)
-                    .attr("text-anchor", "middle")
-                    .text(d => d.frequency);
-
-                simulation.on("tick", () => {
-                    link
-                        .attr("x1", d => d.source.x)
-                        .attr("y1", d => d.source.y)
-                        .attr("x2", d => d.target.x)
-                        .attr("y2", d => d.target.y);
-
-                    node
-                        .attr("transform", d => `translate(${d.x},${d.y})`);
-
-                    linkLabels
-                        .attr("x", d => (d.source.x + d.target.x) / 2)
-                        .attr("y", d => (d.source.y + d.target.y) / 2);
-                });
-
-                // توابع برای رویدادهای drag
-                function dragstarted(event, d) {
-                    if (!event.active) simulation.alphaTarget(0.3).restart();
-                    d.fx = d.x;
-                    d.fy = d.y;
+        // بررسی یال‌های همپوشان و تنظیمات آنها
+        const link = svg.append("g")
+            .attr("class", "links")
+            .selectAll("path")
+            .data(links)
+            .enter().append("path")
+            .attr("class", "link")
+            .attr("d", d => {
+                const matchingLink = links.find(l => l.source.id === d.target.id && l.target.id === d.source.id);
+                if (matchingLink) {
+                    // اگر یال همپوشان بود، از منحنی استفاده کن
+                    const dx = d.target.x - d.source.x;
+                    const dy = d.target.y - d.source.y;
+                    const dr = Math.sqrt(dx * dx + dy * dy);
+                    return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+                } else {
+                    // اگر یال همپوشان نبود، خط صاف رسم کن
+                    return `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`;
                 }
+            })
+            .attr("stroke-width", d => Math.sqrt(d.frequency))
+            .attr("marker-end", "url(#arrowhead)");
 
-                function dragged(event, d) {
-                    d.fx = event.x;
-                    d.fy = event.y;
-                }
+        const linkLabels = svg.append("g")
+            .attr("class", "link-labels")
+            .selectAll("text")
+            .data(links)
+            .enter().append("text")
+            .attr("dy", -10)
+            .attr("text-anchor", "middle")
+            .text(d => d.frequency);
 
-                function dragended(event, d) {
-                    if (!event.active) simulation.alphaTarget(0);
-                    // قفل کردن موقعیت گره‌ها
-                    d.fx = d.x;
-                    d.fy = d.y;
+        const node = svg.append("g")
+            .attr("class", "nodes")
+            .selectAll("g")
+            .data(nodes)
+            .enter().append("g")
+            .attr("class", d => {
+                if (d.id === 'START') return "node start-node";
+                if (d.id === 'END') return "node end-node";
+                return "node";
+            })
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
+
+        node.filter(d => d.id === 'START' || d.id === 'END')
+            .append("circle")
+            .attr("r", 30);
+
+        node.filter(d => d.id !== 'START' && d.id !== 'END')
+            .append("rect")
+            .attr("x", -50)
+            .attr("y", -25)
+            .attr("width", 100)
+            .attr("height", 50);
+
+        node.append("text")
+            .attr("dy", 4)
+            .text(d => d.id);
+
+        simulation.on("tick", () => {
+            link.attr("d", d => {
+                const matchingLink = links.find(l => l.source.id === d.target.id && l.target.id === d.source.id);
+                if (matchingLink) {
+                    const dx = d.target.x - d.source.x;
+                    const dy = d.target.y - d.source.y;
+                    const dr = Math.sqrt(dx * dx + dy * dy);
+                    return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+                } else {
+                    return `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`;
                 }
+            });
+
+            node.attr("transform", d => `translate(${d.x},${d.y})`);
+
+            linkLabels
+                .attr("x", d => (d.source.x + d.target.x) / 2)
+                .attr("y", d => (d.source.y + d.target.y) / 2);
+        });
+
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = d.x;
+            d.fy = d.y;
+        }
 
     </script>
 </body>
