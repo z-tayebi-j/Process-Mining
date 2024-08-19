@@ -1,0 +1,87 @@
+body {
+    background-color: #F0F4F8;
+    color: #333333;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-image: url('images/bg.jfif');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+h1, h2 {
+    text-align: center;
+    color: #4A90E2;
+}
+
+form{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+form input{
+    display: flex;
+    justify-content: stretch;
+}
+
+.buttons{
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+button {
+    background-color: #8E44AD;
+    color: #FFFFFF;
+    border: none;
+    padding: 10px 20px;
+    margin-top: 5%;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #3498DB;
+}
+
+a {
+    text-decoration: none;
+    margin: 5px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 50px auto;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.chart{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.chart img {    
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    transition: transform 0.3s ease-in-out, z-index 0.3s ease;
+    transition-delay: 0.1s;  
+    position: relative;
+    z-index: 1;
+}
+
+.chart img:hover {
+    transform: scale(1.05);
+    z-index: 10;
+    cursor: pointer;
+}

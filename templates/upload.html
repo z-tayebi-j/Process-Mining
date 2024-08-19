@@ -3,46 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>main</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-            flex-direction: column;
-        }
-        .container {
-            text-align: center;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-        .buttons {
-            margin-top: 20px;
-        }
-        button {
-            margin: 0 10px;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            background-color: #007BFF;
-            color: white;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        svg {
-            border: 1px solid #ccc;
-            margin-top: 20px;
-        }
-
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
 <div class="container">
@@ -53,19 +14,22 @@
     </form>
     {% if filename %}
     <h2>You can get result as:</h2>
-    <a href="{{ url_for('dfg2', filename=filename) }}">
-        <button>DFG</button>
-    </a>
-    <a href="{{ url_for('petri_net', filename=filename) }}">
-        <button>Petri Net</button>
-    </a>
-    <a href="{{ url_for('bpmn', filename=filename) }}">
-        <button>BPMN</button>
-    </a>
+    <div class="buttons">
+        <a href="{{ url_for('dfg2', filename=filename) }}">
+            <button>DFG</button>
+        </a>
+        <a href="{{ url_for('petri_net', filename=filename) }}">
+            <button>Petri Net</button>
+        </a>
+        <a href="{{ url_for('bpmn', filename=filename) }}">
+            <button>BPMN</button>
+        </a>
+    </div>
     {% endif %}
     {% if plot_url %}
+
+    <h2>Event Frequencies:</h2>
     <div class="chart">
-        <h2>Event Frequencies:</h2>
         <img src="data:image/png;base64,{{ plot_url }}" alt="Event Frequencies Chart">
     </div>
     <div>
