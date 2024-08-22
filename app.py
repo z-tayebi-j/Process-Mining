@@ -28,13 +28,15 @@ def index():
     elif filename_global:
         log = pm4py.read_xes(path + filename_global)
         event_counts = pm4py.get_event_attribute_values(log, "concept:name")
-
         events_df = pd.DataFrame(list(event_counts.items()), columns=['Event', 'Count'])
         plt.figure(figsize=(5, 3))
+        plt.xticks(fontsize=9)
+        plt.xticks(rotation=20, ha='right')
         plt.bar(events_df['Event'], events_df['Count'])
-        plt.xlabel('Event')
+        plt.xlabel('Activity')
         plt.ylabel('Count')
-        plt.title('Event Frequencies')
+        plt.title('Activity Frequency')
+        plt.tight_layout()
 
         img = BytesIO()
         plt.savefig(img, format='png')
@@ -69,12 +71,11 @@ def dfg(filename):
 def dfg2(filename):
     log = pm4py.read_xes(path + filename)
     dfg, start_activities, end_activities = pm4py.discover_dfg(log)
-    nodes = [{"id": act} for act in set(dfg.keys()).union(start_activities.keys()).union(end_activities.keys())]
+    # nodes = [{"id": act} for act in set(dfg.keys()).union(start_activities.keys()).union(end_activities.keys())]
     links = [{"source": src, "target": tgt, "frequency": freq} for (src, tgt), freq in dfg.items()]
-    print(nodes)
+    nodes = []
+    # print(nodes)
 
-    nodes.append({"id": "START"})
-    nodes.append({"id": "END"})
 
     for act in start_activities:
         links.append({"source": "START", "target": act, "frequency": start_activities[act]})
@@ -82,15 +83,17 @@ def dfg2(filename):
     for act in end_activities:
         links.append({"source": act, "target": "END", "frequency": end_activities[act]})
 
-    node_ids = {node['id'] for node in nodes}
+    node_ids = set()
 
     for link in links:
         if link['source'] not in node_ids:
-            nodes.append({"id": link['source']})
-            print(f"Added missing node for source: {link['source']}")
+            node_ids.add(link['source'])
         if link['target'] not in node_ids:
-            nodes.append({"id": link['target']})
-            print(f"Added missing node for target: {link['target']}")
+            node_ids.add(link['target'])
+
+    for id in node_ids:
+        print(id)
+        nodes.append({"id": id})
 
     return render_template('DFG.html', filename=filename, nodes=nodes, links=links)
 

@@ -1,7 +1,7 @@
 body {
     background-color: #F0F4F8;
     color: #333333;
-    font-family: Arial, sans-serif;
+    font-family: Courier;
     margin: 0;
     padding: 0;
     background-image: url('images/bg.jfif');
@@ -34,6 +34,7 @@ form input{
 }
 
 button {
+    font-family: Courier;
     background-color: #8E44AD;
     color: #FFFFFF;
     border: none;
@@ -47,6 +48,8 @@ button {
 
 button:hover {
     background-color: #3498DB;
+    transform: scale(1.5);
+
 }
 
 a {
@@ -81,7 +84,7 @@ a {
 }
 
 .chart img:hover {
-    transform: scale(1.05);
+    transform: scale(1.5);
     z-index: 10;
     cursor: pointer;
 }

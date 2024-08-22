@@ -56,7 +56,7 @@
     </style>
 </head>
 <body>
-    <svg width="800" height="600"></svg>
+    <svg width="1000" height="700"></svg>
     <script>
         const nodes = {{ nodes | tojson }};
         const links = {{ links | tojson }};
@@ -68,11 +68,10 @@
         svg.append("defs").append("marker")
             .attr("id", "arrowhead")
             .attr("viewBox", "0 -5 10 10")
-            .attr("refX", 20)
             .attr("refY", 0)
             .attr("orient", "auto")
-            .attr("markerWidth", 6)
-            .attr("markerHeight", 6)
+            .attr("markerWidth", 10)
+            .attr("markerHeight", 10)
             .append("path")
             .attr("d", "M 0,-5 L 10,0 L 0,5")
             .attr("class", "arrowhead");
@@ -82,32 +81,12 @@
             .force("charge", d3.forceManyBody().strength(-300))
             .force("center", d3.forceCenter(width / 2, height / 2));
 
-        // تابع برای ایجاد منحنی‌های بزیه
-        const curvedLink = d3.linkHorizontal()
-            .x(d => d.x)
-            .y(d => d.y);
-
-        // بررسی یال‌های همپوشان و تنظیمات آنها
         const link = svg.append("g")
             .attr("class", "links")
             .selectAll("path")
             .data(links)
             .enter().append("path")
             .attr("class", "link")
-            .attr("d", d => {
-                const matchingLink = links.find(l => l.source.id === d.target.id && l.target.id === d.source.id);
-                if (matchingLink) {
-                    // اگر یال همپوشان بود، از منحنی استفاده کن
-                    const dx = d.target.x - d.source.x;
-                    const dy = d.target.y - d.source.y;
-                    const dr = Math.sqrt(dx * dx + dy * dy);
-                    return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
-                } else {
-                    // اگر یال همپوشان نبود، خط صاف رسم کن
-                    return `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`;
-                }
-            })
-            .attr("stroke-width", d => Math.sqrt(d.frequency))
             .attr("marker-end", "url(#arrowhead)");
 
         const linkLabels = svg.append("g")
@@ -162,11 +141,39 @@
                 }
             });
 
+            // تنظیم دقیق موقعیت فلش برای یال‌های منحنی
+            link.attr("marker-end", function(d) {
+                const pathElement = d3.select(this).node();
+                const pathLength = pathElement.getTotalLength();
+                const midpoint = pathElement.getPointAtLength(pathLength / 2);
+                const dx = midpoint.x - d.source.x;
+                const dy = midpoint.y - d.source.y;
+                const refX = Math.sqrt(dx * dx + dy * dy);
+                svg.select("#arrowhead").attr("refX", refX);
+                return "url(#arrowhead)";
+            });
+
             node.attr("transform", d => `translate(${d.x},${d.y})`);
 
             linkLabels
-                .attr("x", d => (d.source.x + d.target.x) / 2)
-                .attr("y", d => (d.source.y + d.target.y) / 2);
+                .attr("x", d => {
+                    const dx = d.target.x - d.source.x;
+                    const dy = d.target.y - d.source.y;
+                    const dr = Math.sqrt(dx * dx + dy * dy);
+                    const midX = (d.source.x + d.target.x) / 2;
+                    const midY = (d.source.y + d.target.y) / 2;
+                    const offsetX = dy / dr * 15;  // تنظیم مقدار 15 بر اساس میزان انحنا و فاصله‌ی موردنظر از مسیر
+                    return midX + offsetX;
+                })
+                .attr("y", d => {
+                    const dx = d.target.x - d.source.x;
+                    const dy = d.target.y - d.source.y;
+                    const dr = Math.sqrt(dx * dx + dy * dy);
+                    const midX = (d.source.x + d.target.x) / 2;
+                    const midY = (d.source.y + d.target.y) / 2;
+                    const offsetY = -dx / dr * 15;  // تنظیم مقدار 15 بر اساس میزان انحنا و فاصله‌ی موردنظر از مسیر
+                    return midY + offsetY;
+                });
         });
 
         function dragstarted(event, d) {
