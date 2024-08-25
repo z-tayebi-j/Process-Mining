@@ -13,6 +13,9 @@
             height: 100vh;
             margin: 0;
             background-color: #f0f0f0;
+            background-size: cover;
+            background-image: url('../static/images/bg.jfif');
+
         }
         .container {
             text-align: center;
@@ -30,12 +33,11 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            background-color: #007BFF;
+            background-color: #6f0e83;
             color: white;
             font-size: 16px;
         }
         button:hover {
-            background-color: #0056b3;
         }
 
 
@@ -45,6 +47,8 @@
 <div class="container">
     <img src="{{ url_for('static', filename='uploads/' + filename) }}" alt="Result" width="1100">
     <button onclick="location.href='/'">Back</button>
+    <button onclick="location.href='/'">Show Interactive Diagram</button>
+
 </div>
 </body>
 </html>

@@ -3,59 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <title>main</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-        }
-        .container {
-            text-align: center;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        .buttons {
-            margin-top: 20px;
-        }
-        button {
-            margin: 0 10px;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            background-color: #007BFF;
-            color: white;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
 <div class="container">
-    <h1>Upload your .xes file here:</h1>
+    <h1>Upload your event log file</h1>
     <form method="post" enctype="multipart/form-data">
         <input type="file" name="file" required>
-        <button type="submit">upload</button>
+        <button type="submit">Upload</button>
     </form>
-    {% if  filename %}
-    <h2>You can get result as:</h2>
-    <a href="{{ url_for('dfg', filename=filename) }}">
-        <button>DFG</button>
-    </a>
-    <a href="{{ url_for('petri_net', filename=filename) }}">
-        <button>Petri Net</button>
-    </a>
-    <a href="{{ url_for('bpmn', filename=filename) }}">
-        <button>BPMN</button>
-    </a>
+    {% if filename %}
+    <h2>You can get result of process discovery as:</h2>
+    <div class="buttons">
+        <a href="{{ url_for('dfg2', filename=filename) }}">
+            <button>DFG</button>
+        </a>
+        <a href="{{ url_for('petri_net', filename=filename) }}">
+            <button>Petri Net</button>
+        </a>
+        <a href="{{ url_for('bpmn', filename=filename) }}">
+            <button>BPMN</button>
+        </a>
+    </div>
+    {% endif %}
+    {% if plot_url %}
+
+    <h2>Event Frequencies:</h2>
+    <div class="chart">
+        <img src="data:image/png;base64,{{ plot_url }}" alt="Event Frequencies Chart">
+    </div>
+    <div>
+        <ul>
+            {% for event, count in data.items() %}
+            <li>{{ event }}: {{ count }}</li>
+            {% endfor %}
+        </ul>
+    </div>
     {% endif %}
 </div>
 </body>

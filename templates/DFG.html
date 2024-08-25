@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DFG Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            flex-direction: column;
+            background-size: cover;
+            background-image: url('../static/images/bg.jfif');
+        }
+
+        .node circle {
+            fill: #69b3a2;
+            stroke: #000;
+            stroke-width: 1.5px;
+            cursor: pointer;
+        }
+
+        .node rect {
+            fill: #ece8fa;
+            stroke: #000;
+            stroke-width: 1.5px;
+            cursor: pointer;
+        }
+
+        .node text {
+            font: 12px sans-serif;
+            text-anchor: middle;
+            fill: #000000;
+            pointer-events: none;
+        }
+        .link-labels{
+        fill: #ffffff;
+        }
+
+        .link {
+            fill: none;
+            stroke: #ffffff;
+            stroke-opacity: 0.6;
+        }
+
+        .start-node circle {
+            fill: #8459d8;
+        }
+
+        .end-node circle {
+            fill: #8459d8;
+        }
+
+        .arrowhead {
+            fill:  #ffffff;
+        }
+        .arrowhead-highlight {
+            fill: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <svg width="1200" height="800"></svg>
+    <script>
+        const nodes = {{ nodes | tojson }};
+        const links = {{ links | tojson }};
+
+        const svg = d3.select("svg"),
+              width = +svg.attr("width"),
+              height = +svg.attr("height");
+
+        svg.append("defs").append("marker")
+            .attr("id", "arrowhead")
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refY", 0)
+            .attr("orient", "auto")
+            .attr("markerWidth", 10)
+            .attr("markerHeight", 10)
+            .append("path")
+            .attr("d", "M 0,-5 L 10,0 L 0,5")
+            .attr("class", "arrowhead");
+
+        svg.append("defs").append("marker")
+            .attr("id", "arrowhead-highlight")
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refY", 0)
+            .attr("orient", "auto")
+            .attr("markerWidth", 10)
+            .attr("markerHeight", 10)
+            .append("path")
+            .attr("d", "M 0,-5 L 10,0 L 0,5")
+            .attr("class", "arrowhead-highlight");
+
+
+        const simulation = d3.forceSimulation(nodes)
+            .force("link", d3.forceLink(links).id(d => d.id).distance(100))
+            .force("charge", d3.forceManyBody().strength(-300))
+            .force("center", d3.forceCenter(width / 2, height / 2));
+
+        const link = svg.append("g")
+            .attr("class", "links")
+            .selectAll("path")
+            .data(links)
+            .enter().append("path")
+            .attr("class", "link")
+            .attr("marker-end", "url(#arrowhead)");
+
+        const linkLabels = svg.append("g")
+            .attr("class", "link-labels")
+            .selectAll("text")
+            .data(links)
+            .enter().append("text")
+            .attr("dy", -10)
+            .attr("text-anchor", "middle")
+            .text(d => d.frequency);
+
+        const node = svg.append("g")
+            .attr("class", "nodes")
+            .selectAll("g")
+            .data(nodes)
+            .enter().append("g")
+            .attr("class", d => {
+                if (d.id === 'START') return "node start-node";
+                if (d.id === 'END') return "node end-node";
+                return "node";
+            })
+            .on("mouseover", function(event, d) {
+                // پررنگ کردن اتصالات مرتبط
+                link.filter(l => l.source.id === d.id || l.target.id === d.id)
+                    .attr("stroke-opacity", 1)
+                    .attr("stroke", "#ff0000")  // تغییر رنگ به قرمز
+                    .attr("marker-end", "url(#arrowhead-highlight)");
+
+                // پررنگ کردن برچسب‌های مرتبط
+                linkLabels.filter(l => l.source.id === d.id || l.target.id === d.id)
+                    .attr("fill", "#ff0000");  // تغییر رنگ به قرمز
+            })
+            .on("mouseout", function(event, d) {
+                // بازگرداندن اتصالات به حالت اولیه
+                link.filter(l => l.source.id === d.id || l.target.id === d.id)
+                    .attr("stroke-opacity", 0.6)
+                    .attr("stroke", "#ffffff")  // بازگرداندن رنگ به سفید
+                    .attr("marker-end", "url(#arrowhead)");
+
+                // بازگرداندن برچسب‌ها به حالت اولیه
+                linkLabels.filter(l => l.source.id === d.id || l.target.id === d.id)
+                    .attr("fill", "#ffffff");  // بازگرداندن رنگ به سفید
+            })
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
+
+
+        node.filter(d => d.id === 'START' || d.id === 'END')
+            .append("circle")
+            .attr("r", 30);
+
+        node.filter(d => d.id !== 'START' && d.id !== 'END')
+            .append("rect")
+            .attr("x", -50)
+            .attr("y", -25)
+            .attr("width", 100)
+            .attr("height", 50);
+
+        node.append("text")
+            .attr("dy", 4)
+            .text(d => d.id);
+
+        simulation.on("tick", () => {
+            link.attr("d", d => {
+                const matchingLink = links.find(l => l.source.id === d.target.id && l.target.id === d.source.id);
+                if (matchingLink) {
+                    const dx = d.target.x - d.source.x;
+                    const dy = d.target.y - d.source.y;
+                    const dr = Math.sqrt(dx * dx + dy * dy);
+                    return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+                } else {
+                    return `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`;
+                }
+            });
+
+            link.attr("marker-end", function(d) {
+                const pathElement = d3.select(this).node();
+                const pathLength = pathElement.getTotalLength();
+                const midpoint = pathElement.getPointAtLength(pathLength / 2);
+                const dx = midpoint.x - d.source.x;
+                const dy = midpoint.y - d.source.y;
+                const refX = Math.sqrt(dx * dx + dy * dy);
+                svg.select("#arrowhead").attr("refX", refX);
+                return "url(#arrowhead)";
+            });
+
+            node.attr("transform", d => `translate(${d.x},${d.y})`);
+
+            linkLabels
+                .attr("x", d => {
+                    const dx = d.target.x - d.source.x;
+                    const dy = d.target.y - d.source.y;
+                    const dr = Math.sqrt(dx * dx + dy * dy);
+                    const midX = (d.source.x + d.target.x) / 2;
+                    const midY = (d.source.y + d.target.y) / 2;
+                    const offsetX = dy / dr * 15;
+                    return midX + offsetX;
+                })
+                .attr("y", d => {
+                    const dx = d.target.x - d.source.x;
+                    const dy = d.target.y - d.source.y;
+                    const dr = Math.sqrt(dx * dx + dy * dy);
+                    const midX = (d.source.x + d.target.x) / 2;
+                    const midY = (d.source.y + d.target.y) / 2;
+                    const offsetY = -dx / dr * 15;
+                    return midY + offsetY;
+                });
+        });
+
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+    </script>
+</body>
+</html>
