@@ -15,6 +15,7 @@
             flex-direction: column;
             background-size: cover;
             background-image: url('../static/images/bg.jfif');
+
         }
 
         .node circle {
@@ -26,6 +27,7 @@
 
         .node rect {
             fill: #ece8fa;
+
             stroke: #000;
             stroke-width: 1.5px;
             cursor: pointer;
@@ -65,6 +67,7 @@
 </head>
 <body>
     <svg width="1200" height="800"></svg>
+
     <script>
         const nodes = {{ nodes | tojson }};
         const links = {{ links | tojson }};
@@ -129,27 +132,25 @@
                 return "node";
             })
             .on("mouseover", function(event, d) {
-                // پررنگ کردن اتصالات مرتبط
                 link.filter(l => l.source.id === d.id || l.target.id === d.id)
                     .attr("stroke-opacity", 1)
-                    .attr("stroke", "#ff0000")  // تغییر رنگ به قرمز
+                    .attr("stroke", "#ff0000")
                     .attr("marker-end", "url(#arrowhead-highlight)");
 
-                // پررنگ کردن برچسب‌های مرتبط
                 linkLabels.filter(l => l.source.id === d.id || l.target.id === d.id)
-                    .attr("fill", "#ff0000");  // تغییر رنگ به قرمز
+                    .attr("fill", "#ff0000");
             })
             .on("mouseout", function(event, d) {
-                // بازگرداندن اتصالات به حالت اولیه
+
                 link.filter(l => l.source.id === d.id || l.target.id === d.id)
                     .attr("stroke-opacity", 0.6)
-                    .attr("stroke", "#ffffff")  // بازگرداندن رنگ به سفید
+                    .attr("stroke", "#ffffff")
                     .attr("marker-end", "url(#arrowhead)");
 
-                // بازگرداندن برچسب‌ها به حالت اولیه
                 linkLabels.filter(l => l.source.id === d.id || l.target.id === d.id)
-                    .attr("fill", "#ffffff");  // بازگرداندن رنگ به سفید
+                    .attr("fill", "#ffffff");
             })
+
             .call(d3.drag()
                 .on("start", dragstarted)
                 .on("drag", dragged)
@@ -184,6 +185,7 @@
                 }
             });
 
+
             link.attr("marker-end", function(d) {
                 const pathElement = d3.select(this).node();
                 const pathLength = pathElement.getTotalLength();
@@ -205,6 +207,7 @@
                     const midX = (d.source.x + d.target.x) / 2;
                     const midY = (d.source.y + d.target.y) / 2;
                     const offsetX = dy / dr * 15;
+
                     return midX + offsetX;
                 })
                 .attr("y", d => {
