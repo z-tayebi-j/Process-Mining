@@ -12,7 +12,7 @@ body {
 
 h1, h2 {
     text-align: center;
-    color: #4A90E2;
+    color: #1e0972;
 }
 
 form{
@@ -35,7 +35,7 @@ form input{
 
 button {
     font-family: Courier;
-    background-color: #8E44AD;
+    background-color: #6f0e83;
     color: #FFFFFF;
     border: none;
     padding: 10px 20px;
@@ -47,7 +47,6 @@ button {
 }
 
 button:hover {
-    background-color: #3498DB;
     transform: scale(1.5);
 
 }
@@ -72,13 +71,13 @@ a {
     align-items: center;
 }
 
-.chart img {    
+.chart img {
     max-width: 100%;
     height: auto;
     border: 1px solid #ddd;
     border-radius: 10px;
     transition: transform 0.3s ease-in-out, z-index 0.3s ease;
-    transition-delay: 0.1s;  
+    transition-delay: 0.1s;
     position: relative;
     z-index: 1;
 }
