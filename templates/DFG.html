@@ -17,6 +17,23 @@
             background-image: url('../static/images/bg.jfif');
 
         }
+        button {
+            font-family: Courier;
+            background-color: #6f0e83;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 5%;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            transform: scale(1.5);
+        }
+
 
         .node circle {
             fill: #69b3a2;
@@ -67,6 +84,7 @@
 </head>
 <body>
     <svg width="1200" height="800"></svg>
+    <button onclick="location.href='/'">Back</button>
 
     <script>
         const nodes = {{ nodes | tojson }};

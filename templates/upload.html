@@ -15,7 +15,7 @@
     {% if filename %}
     <h2>You can get result of process discovery as:</h2>
     <div class="buttons">
-        <a href="{{ url_for('dfg2', filename=filename) }}">
+        <a href="{{ url_for('dfg', filename=filename) }}">
             <button>DFG</button>
         </a>
         <a href="{{ url_for('petri_net', filename=filename) }}">

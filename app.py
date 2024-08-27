@@ -64,7 +64,7 @@ def dfg(filename):
     log = pm4py.read_xes(path + filename)
     dfg, start_activities, end_activities = pm4py.discover_dfg(log)
     pm4py.save_vis_dfg(dfg, start_activities, end_activities, path + "dfg.png")
-    return redirect(url_for('display_image', filename="dfg.png"))
+    return render_template('display_dfg.html', filename="dfg.png", dataset=filename)
 
 
 @app.route('/dfg2/<filename>')

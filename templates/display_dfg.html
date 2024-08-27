@@ -1,0 +1,55 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            background-size: cover;
+            background-image: url('../static/images/bg.jfif');
+
+        }
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .buttons {
+            margin-top: 20px;
+        }
+        button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #6f0e83;
+            color: white;
+            font-size: 16px;
+        }
+        button:hover {
+        }
+
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <img src="{{ url_for('static', filename='uploads/' + filename) }}" alt="Result" width="1100">
+    <button onclick="location.href='/'">Back</button>
+    <button onclick="location.href='{{ url_for('dfg2', filename=dataset) }}'">Show Interactive Diagram</button>
+
+</div>
+</body>
+</html>
+
