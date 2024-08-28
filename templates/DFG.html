@@ -64,6 +64,15 @@
             fill: none;
             stroke: #ffffff;
             stroke-opacity: 0.6;
+            stroke-width: 2;
+
+        }
+
+        .link-highlight {
+            fill: none;
+            stroke: #ffffff;
+            stroke-opacity: 0.6;
+            stroke-width: 4;
         }
 
         .start-node circle {
@@ -78,7 +87,10 @@
             fill:  #ffffff;
         }
         .arrowhead-highlight {
-            fill: #ff0000;
+            fill: #fffc34 !important;
+        }
+        .highlighted {
+            fill: #fffc34 !important;
         }
     </style>
 </head>
@@ -123,12 +135,18 @@
             .force("center", d3.forceCenter(width / 2, height / 2));
 
         const link = svg.append("g")
-            .attr("class", "links")
             .selectAll("path")
             .data(links)
             .enter().append("path")
             .attr("class", "link")
             .attr("marker-end", "url(#arrowhead)");
+
+        const link_highlight = svg.append("g")
+            .selectAll("path")
+            .data(links)
+            .enter().append("path")
+            .attr("class", "link-highlight")
+            .attr("marker-end", "url(#arrowhead-highlight)");
 
         const linkLabels = svg.append("g")
             .attr("class", "link-labels")
@@ -150,25 +168,37 @@
                 return "node";
             })
             .on("mouseover", function(event, d) {
+                d3.select(this).select("circle, rect").classed("highlighted", true);
+
+                node.selectAll("circle, rect")
+                    .filter(n => links.some(l => (l.source.id === d.id && l.target.id === n.id) || (l.source.id === n.id && l.target.id === d.id)))
+                    .classed("highlighted", true);
+
                 link.filter(l => l.source.id === d.id || l.target.id === d.id)
-                    .attr("stroke-opacity", 1)
-                    .attr("stroke", "#ff0000")
+                    .style("stroke", "#fffc34") 
+                    .style("stroke-width", "4px")
                     .attr("marker-end", "url(#arrowhead-highlight)");
 
+
                 linkLabels.filter(l => l.source.id === d.id || l.target.id === d.id)
-                    .attr("fill", "#ff0000");
+                    .attr("fill", "#fffc34");
             })
             .on("mouseout", function(event, d) {
+                d3.select(this).select("circle, rect").classed("highlighted", false);
+
+                node.selectAll("circle, rect")
+                    .filter(n => links.some(l => (l.source.id === d.id && l.target.id === n.id) || (l.source.id === n.id && l.target.id === d.id)))
+                    .classed("highlighted", false);
 
                 link.filter(l => l.source.id === d.id || l.target.id === d.id)
-                    .attr("stroke-opacity", 0.6)
-                    .attr("stroke", "#ffffff")
+                    .style("stroke", "#ffffff")
+                    .style("stroke-width", "2px")
                     .attr("marker-end", "url(#arrowhead)");
+
 
                 linkLabels.filter(l => l.source.id === d.id || l.target.id === d.id)
                     .attr("fill", "#ffffff");
             })
-
             .call(d3.drag()
                 .on("start", dragstarted)
                 .on("drag", dragged)
