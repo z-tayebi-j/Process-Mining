@@ -49,7 +49,7 @@
         }
 
         .node text {
-            font: 12px sans-serif;
+            font: 14px Candara;
             text-anchor: middle;
             fill: #000000;
             pointer-events: none;
@@ -57,6 +57,7 @@
 
         .link-labels {
             fill: #ffffff;
+            font: 14px Candara;
         }
 
         .link {
@@ -99,23 +100,22 @@
               width = +svg.attr("width"),
               height = +svg.attr("height");
 
-        // Define arrow markers
         svg.append("defs").selectAll("marker")
             .data(["arrow", "arrow-highlight"])
             .enter().append("marker")
             .attr("id", d => d)
             .attr("viewBox", "0 -5 10 10")
-            .attr("refX", 60)
+            .attr("refX", 70)
             .attr("refY", 0)
-            .attr("markerWidth", 6)
-            .attr("markerHeight", 6)
+            .attr("markerWidth", 12)
+            .attr("markerHeight", 12)
             .attr("orient", "auto")
              .attr('markerUnits', 'userSpaceOnUse')
             .attr("class", d => d)
             .append("path")
-            .attr("d", "M0,-5L10,0L0,5");
+            .attr("d", "M0,-5L10,0L0,5")
+            .attr("fill", d => d === "arrow" ? "#ffffff" : "yellow");
 
-        // Define links with markers
         const link = svg.append("g")
             .selectAll("path")
             .data(links)
@@ -157,10 +157,13 @@
                 link.filter(l => l.source.id === d.id || l.target.id === d.id)
                     .style("stroke", "#fffc34")
                     .style("stroke-width", "4px")
+                    .style("stroke-opacity", "1")
                     .attr("marker-end", "url(#arrow-highlight)");
 
                 linkLabels.filter(l => l.source.id === d.id || l.target.id === d.id)
-                    .attr("fill", "#fffc34");
+                    .attr("fill", "#fffc34")
+                    .style("font-size", "20px")
+                    .style("font-weight", "bold");
             })
             .on("mouseout", function(event, d) {
                 d3.select(this).select("circle, rect").classed("highlighted", false);
@@ -172,10 +175,13 @@
                 link.filter(l => l.source.id === d.id || l.target.id === d.id)
                     .style("stroke", "#ffffff")
                     .style("stroke-width", "2px")
+                    .style("stroke-opacity", "0.6")
                     .attr("marker-end", "url(#arrow)");
 
                 linkLabels.filter(l => l.source.id === d.id || l.target.id === d.id)
-                    .attr("fill", "#ffffff");
+                    .attr("fill", "#ffffff")
+                    .style("font-size", "14px")
+                    .style("font-weight", "normal");
             })
             .call(d3.drag()
                 .on("start", dragstarted)
@@ -188,10 +194,10 @@
 
         node.filter(d => d.id !== 'START' && d.id !== 'END')
             .append("rect")
-            .attr("x", -50)
-            .attr("y", -25)
-            .attr("width", 100)
-            .attr("height", 50);
+            .attr("x", -60)
+            .attr("y", -30)
+            .attr("width", 120)
+            .attr("height", 60);
 
         node.append("text")
             .attr("dy", 4)
