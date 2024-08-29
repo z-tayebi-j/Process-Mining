@@ -15,8 +15,8 @@
             flex-direction: column;
             background-size: cover;
             background-image: url('../static/images/bg.jfif');
-
         }
+
         button {
             font-family: Courier;
             background-color: #6f0e83;
@@ -34,7 +34,6 @@
             transform: scale(1.5);
         }
 
-
         .node circle {
             fill: #69b3a2;
             stroke: #000;
@@ -44,7 +43,6 @@
 
         .node rect {
             fill: #ece8fa;
-
             stroke: #000;
             stroke-width: 1.5px;
             cursor: pointer;
@@ -56,8 +54,9 @@
             fill: #000000;
             pointer-events: none;
         }
-        .link-labels{
-        fill: #ffffff;
+
+        .link-labels {
+            fill: #ffffff;
         }
 
         .link {
@@ -65,14 +64,14 @@
             stroke: #ffffff;
             stroke-opacity: 0.6;
             stroke-width: 2;
-
+            marker-end: url(#arrow);
         }
 
         .link-highlight {
             fill: none;
-            stroke: #ffffff;
             stroke-opacity: 0.6;
             stroke-width: 4;
+            marker-end: url(#arrow-highlight);
         }
 
         .start-node circle {
@@ -83,12 +82,6 @@
             fill: #8459d8;
         }
 
-        .arrowhead {
-            fill:  #ffffff;
-        }
-        .arrowhead-highlight {
-            fill: #fffc34 !important;
-        }
         .highlighted {
             fill: #fffc34 !important;
         }
@@ -106,47 +99,34 @@
               width = +svg.attr("width"),
               height = +svg.attr("height");
 
-        svg.append("defs").append("marker")
-            .attr("id", "arrowhead")
+        // Define arrow markers
+        svg.append("defs").selectAll("marker")
+            .data(["arrow", "arrow-highlight"])
+            .enter().append("marker")
+            .attr("id", d => d)
             .attr("viewBox", "0 -5 10 10")
+            .attr("refX", 60)
             .attr("refY", 0)
+            .attr("markerWidth", 6)
+            .attr("markerHeight", 6)
             .attr("orient", "auto")
-            .attr("markerWidth", 10)
-            .attr("markerHeight", 10)
+             .attr('markerUnits', 'userSpaceOnUse')
+            .attr("class", d => d)
             .append("path")
-            .attr("d", "M 0,-5 L 10,0 L 0,5")
-            .attr("class", "arrowhead");
+            .attr("d", "M0,-5L10,0L0,5");
 
-        svg.append("defs").append("marker")
-            .attr("id", "arrowhead-highlight")
-            .attr("viewBox", "0 -5 10 10")
-            .attr("refY", 0)
-            .attr("orient", "auto")
-            .attr("markerWidth", 10)
-            .attr("markerHeight", 10)
-            .append("path")
-            .attr("d", "M 0,-5 L 10,0 L 0,5")
-            .attr("class", "arrowhead-highlight");
-
-
-        const simulation = d3.forceSimulation(nodes)
-            .force("link", d3.forceLink(links).id(d => d.id).distance(100))
-            .force("charge", d3.forceManyBody().strength(-300))
-            .force("center", d3.forceCenter(width / 2, height / 2));
-
+        // Define links with markers
         const link = svg.append("g")
             .selectAll("path")
             .data(links)
             .enter().append("path")
-            .attr("class", "link")
-            .attr("marker-end", "url(#arrowhead)");
+            .attr("class", "link");
 
         const link_highlight = svg.append("g")
             .selectAll("path")
             .data(links)
             .enter().append("path")
-            .attr("class", "link-highlight")
-            .attr("marker-end", "url(#arrowhead-highlight)");
+            .attr("class", "link-highlight");
 
         const linkLabels = svg.append("g")
             .attr("class", "link-labels")
@@ -175,10 +155,9 @@
                     .classed("highlighted", true);
 
                 link.filter(l => l.source.id === d.id || l.target.id === d.id)
-                    .style("stroke", "#fffc34") 
+                    .style("stroke", "#fffc34")
                     .style("stroke-width", "4px")
-                    .attr("marker-end", "url(#arrowhead-highlight)");
-
+                    .attr("marker-end", "url(#arrow-highlight)");
 
                 linkLabels.filter(l => l.source.id === d.id || l.target.id === d.id)
                     .attr("fill", "#fffc34");
@@ -193,8 +172,7 @@
                 link.filter(l => l.source.id === d.id || l.target.id === d.id)
                     .style("stroke", "#ffffff")
                     .style("stroke-width", "2px")
-                    .attr("marker-end", "url(#arrowhead)");
-
+                    .attr("marker-end", "url(#arrow)");
 
                 linkLabels.filter(l => l.source.id === d.id || l.target.id === d.id)
                     .attr("fill", "#ffffff");
@@ -203,7 +181,6 @@
                 .on("start", dragstarted)
                 .on("drag", dragged)
                 .on("end", dragended));
-
 
         node.filter(d => d.id === 'START' || d.id === 'END')
             .append("circle")
@@ -220,6 +197,10 @@
             .attr("dy", 4)
             .text(d => d.id);
 
+        const simulation = d3.forceSimulation(nodes)
+            .force("link", d3.forceLink(links).id(d => d.id).distance(100))
+            .force("charge", d3.forceManyBody().strength(-300))
+            .force("center", d3.forceCenter(width / 2, height / 2));
         simulation.on("tick", () => {
             link.attr("d", d => {
                 const matchingLink = links.find(l => l.source.id === d.target.id && l.target.id === d.source.id);
@@ -233,18 +214,6 @@
                 }
             });
 
-
-            link.attr("marker-end", function(d) {
-                const pathElement = d3.select(this).node();
-                const pathLength = pathElement.getTotalLength();
-                const midpoint = pathElement.getPointAtLength(pathLength / 2);
-                const dx = midpoint.x - d.source.x;
-                const dy = midpoint.y - d.source.y;
-                const refX = Math.sqrt(dx * dx + dy * dy);
-                svg.select("#arrowhead").attr("refX", refX);
-                return "url(#arrowhead)";
-            });
-
             node.attr("transform", d => `translate(${d.x},${d.y})`);
 
             linkLabels
@@ -255,7 +224,6 @@
                     const midX = (d.source.x + d.target.x) / 2;
                     const midY = (d.source.y + d.target.y) / 2;
                     const offsetX = dy / dr * 15;
-
                     return midX + offsetX;
                 })
                 .attr("y", d => {
@@ -285,7 +253,6 @@
             d.fx = d.x;
             d.fy = d.y;
         }
-
     </script>
 </body>
 </html>
