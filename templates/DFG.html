@@ -1,264 +1,264 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>DFG Visualization</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-            flex-direction: column;
-            background-size: cover;
-            background-image: url('../static/images/bg.jfif');
-        }
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+        flex-direction: column;
+        background-size: cover;
+        background-image: url("../static/images/bg.jfif");
+      }
 
-        button {
-            font-family: Courier;
-            background-color: #6f0e83;
-            color: #FFFFFF;
-            border: none;
-            padding: 10px 20px;
-            margin-top: 5%;
-            cursor: pointer;
-            font-size: 16px;
-            border-radius: 8px;
-            transition: background-color 0.3s ease;
-        }
+      button {
+        font-family: Courier;
+        background-color: #6f0e83;
+        color: #ffffff;
+        border: none;
+        padding: 10px 20px;
+        margin-top: 5%;
+        cursor: pointer;
+        font-size: 16px;
+        border-radius: 8px;
+        transition: background-color 0.3s ease;
+      }
 
-        button:hover {
-            transform: scale(1.5);
-        }
+      button:hover {
+        transform: scale(1.5);
+      }
 
-        .node circle {
-            fill: #69b3a2;
-            stroke: #000;
-            stroke-width: 1.5px;
-            cursor: pointer;
-        }
+      .node circle {
+        fill: #69b3a2;
+        stroke: #000;
+        stroke-width: 1.5px;
+        cursor: pointer;
+      }
 
-        .node rect {
-            fill: #ece8fa;
-            stroke: #000;
-            stroke-width: 1.5px;
-            cursor: pointer;
-        }
+      .node rect {
+        fill: #ece8fa;
+        stroke: #000;
+        stroke-width: 1.5px;
+        cursor: pointer;
+      }
 
-        .node text {
-            font: 14px Candara;
-            text-anchor: middle;
-            fill: #000000;
-            pointer-events: none;
-        }
+      .node text {
+        font: 14px Candara;
+        text-anchor: middle;
+        fill: #000000;
+        pointer-events: none;
+      }
 
-        .link-labels {
-            fill: #ffffff;
-            font: 14px Candara;
-        }
+      .link-labels {
+        fill: #ffffff;
+        font: 14px Candara;
+      }
 
-        .link {
-            fill: none;
-            stroke: #ffffff;
-            stroke-opacity: 0.6;
-            stroke-width: 2;
-            marker-end: url(#arrow);
-        }
+      .link {
+        fill: none;
+        stroke: #ffffff;
+        stroke-opacity: 0.6;
+        stroke-width: 2;
+        marker-end: url(#arrow);
+      }
 
-        .link-highlight {
-            fill: none;
-            stroke-opacity: 0.6;
-            stroke-width: 4;
-            marker-end: url(#arrow-highlight);
-        }
+      .link-highlight {
+        fill: none;
+        stroke-opacity: 0.6;
+        stroke-width: 4;
+        marker-end: url(#arrow-highlight);
+      }
 
-        .start-node circle {
-            fill: #8459d8;
-        }
+      .start-node circle {
+        fill: #8459d8;
+      }
 
-        .end-node circle {
-            fill: #8459d8;
-        }
+      .end-node circle {
+        fill: #8459d8;
+      }
 
-        .highlighted {
-            fill: #fffc34 !important;
-        }
+      .highlighted {
+        fill: #fffc34 !important;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <svg width="1200" height="800"></svg>
     <button onclick="location.href='/'">Back</button>
 
     <script>
-        const nodes = {{ nodes | tojson }};
-        const links = {{ links | tojson }};
+      const nodes = {{ nodes | tojson }};
+      const links = {{ links | tojson }};
 
-        const svg = d3.select("svg"),
-              width = +svg.attr("width"),
-              height = +svg.attr("height");
+      const svg = d3.select("svg"),
+            width = +svg.attr("width"),
+            height = +svg.attr("height");
 
-        svg.append("defs").selectAll("marker")
-            .data(["arrow", "arrow-highlight"])
-            .enter().append("marker")
-            .attr("id", d => d)
-            .attr("viewBox", "0 -5 10 10")
-            .attr("refX", 70)
-            .attr("refY", 0)
-            .attr("markerWidth", 12)
-            .attr("markerHeight", 12)
-            .attr("orient", "auto")
-             .attr('markerUnits', 'userSpaceOnUse')
-            .attr("class", d => d)
-            .append("path")
-            .attr("d", "M0,-5L10,0L0,5")
-            .attr("fill", d => d === "arrow" ? "#ffffff" : "yellow");
+      svg.append("defs").selectAll("marker")
+          .data(["arrow", "arrow-highlight"])
+          .enter().append("marker")
+          .attr("id", d => d)
+          .attr("viewBox", "0 -5 10 10")
+          .attr("refX", 70)
+          .attr("refY", 0)
+          .attr("markerWidth", 15)
+          .attr("markerHeight", 15)
+          .attr("orient", "auto")
+           .attr('markerUnits', 'userSpaceOnUse')
+          .attr("class", d => d)
+          .append("path")
+          .attr("d", "M0,-5L10,0L0,5")
+          .attr("fill", d => d === "arrow" ? "#ffffff" : "yellow");
 
-        const link = svg.append("g")
-            .selectAll("path")
-            .data(links)
-            .enter().append("path")
-            .attr("class", "link");
+      const link = svg.append("g")
+          .selectAll("path")
+          .data(links)
+          .enter().append("path")
+          .attr("class", "link");
 
-        const link_highlight = svg.append("g")
-            .selectAll("path")
-            .data(links)
-            .enter().append("path")
-            .attr("class", "link-highlight");
+      const link_highlight = svg.append("g")
+          .selectAll("path")
+          .data(links)
+          .enter().append("path")
+          .attr("class", "link-highlight");
 
-        const linkLabels = svg.append("g")
-            .attr("class", "link-labels")
-            .selectAll("text")
-            .data(links)
-            .enter().append("text")
-            .attr("dy", -10)
-            .attr("text-anchor", "middle")
-            .text(d => d.frequency);
+      const linkLabels = svg.append("g")
+          .attr("class", "link-labels")
+          .selectAll("text")
+          .data(links)
+          .enter().append("text")
+          .attr("dy", -10)
+          .attr("text-anchor", "middle")
+          .text(d => d.frequency);
 
-        const node = svg.append("g")
-            .attr("class", "nodes")
-            .selectAll("g")
-            .data(nodes)
-            .enter().append("g")
-            .attr("class", d => {
-                if (d.id === 'START') return "node start-node";
-                if (d.id === 'END') return "node end-node";
-                return "node";
-            })
-            .on("mouseover", function(event, d) {
-                d3.select(this).select("circle, rect").classed("highlighted", true);
+      const node = svg.append("g")
+          .attr("class", "nodes")
+          .selectAll("g")
+          .data(nodes)
+          .enter().append("g")
+          .attr("class", d => {
+              if (d.id === 'START') return "node start-node";
+              if (d.id === 'END') return "node end-node";
+              return "node";
+          })
+          .on("mouseover", function(event, d) {
+              d3.select(this).select("circle, rect").classed("highlighted", true);
 
-                node.selectAll("circle, rect")
-                    .filter(n => links.some(l => (l.source.id === d.id && l.target.id === n.id) || (l.source.id === n.id && l.target.id === d.id)))
-                    .classed("highlighted", true);
+              node.selectAll("circle, rect")
+                  .filter(n => links.some(l => (l.source.id === d.id && l.target.id === n.id) || (l.source.id === n.id && l.target.id === d.id)))
+                  .classed("highlighted", true);
 
-                link.filter(l => l.source.id === d.id || l.target.id === d.id)
-                    .style("stroke", "#fffc34")
-                    .style("stroke-width", "4px")
-                    .style("stroke-opacity", "1")
-                    .attr("marker-end", "url(#arrow-highlight)");
+              link.filter(l => l.source.id === d.id || l.target.id === d.id)
+                  .style("stroke", "#fffc34")
+                  .style("stroke-width", "4px")
+                  .style("stroke-opacity", "1")
+                  .attr("marker-end", "url(#arrow-highlight)");
 
-                linkLabels.filter(l => l.source.id === d.id || l.target.id === d.id)
-                    .attr("fill", "#fffc34")
-                    .style("font-size", "20px")
-                    .style("font-weight", "bold");
-            })
-            .on("mouseout", function(event, d) {
-                d3.select(this).select("circle, rect").classed("highlighted", false);
+              linkLabels.filter(l => l.source.id === d.id || l.target.id === d.id)
+                  .attr("fill", "#fffc34")
+                  .style("font-size", "20px")
+                  .style("font-weight", "bold");
+          })
+          .on("mouseout", function(event, d) {
+              d3.select(this).select("circle, rect").classed("highlighted", false);
 
-                node.selectAll("circle, rect")
-                    .filter(n => links.some(l => (l.source.id === d.id && l.target.id === n.id) || (l.source.id === n.id && l.target.id === d.id)))
-                    .classed("highlighted", false);
+              node.selectAll("circle, rect")
+                  .filter(n => links.some(l => (l.source.id === d.id && l.target.id === n.id) || (l.source.id === n.id && l.target.id === d.id)))
+                  .classed("highlighted", false);
 
-                link.filter(l => l.source.id === d.id || l.target.id === d.id)
-                    .style("stroke", "#ffffff")
-                    .style("stroke-width", "2px")
-                    .style("stroke-opacity", "0.6")
-                    .attr("marker-end", "url(#arrow)");
+              link.filter(l => l.source.id === d.id || l.target.id === d.id)
+                  .style("stroke", "#ffffff")
+                  .style("stroke-width", "2px")
+                  .style("stroke-opacity", "0.6")
+                  .attr("marker-end", "url(#arrow)");
 
-                linkLabels.filter(l => l.source.id === d.id || l.target.id === d.id)
-                    .attr("fill", "#ffffff")
-                    .style("font-size", "14px")
-                    .style("font-weight", "normal");
-            })
-            .call(d3.drag()
-                .on("start", dragstarted)
-                .on("drag", dragged)
-                .on("end", dragended));
+              linkLabels.filter(l => l.source.id === d.id || l.target.id === d.id)
+                  .attr("fill", "#ffffff")
+                  .style("font-size", "14px")
+                  .style("font-weight", "normal");
+          })
+          .call(d3.drag()
+              .on("start", dragstarted)
+              .on("drag", dragged)
+              .on("end", dragended));
 
-        node.filter(d => d.id === 'START' || d.id === 'END')
-            .append("circle")
-            .attr("r", 30);
+      node.filter(d => d.id === 'START' || d.id === 'END')
+          .append("circle")
+          .attr("r", 40);
 
-        node.filter(d => d.id !== 'START' && d.id !== 'END')
-            .append("rect")
-            .attr("x", -60)
-            .attr("y", -30)
-            .attr("width", 120)
-            .attr("height", 60);
+      node.filter(d => d.id !== 'START' && d.id !== 'END')
+          .append("rect")
+          .attr("x", -70)
+          .attr("y", -35)
+          .attr("width", 140)
+          .attr("height", 70);
 
-        node.append("text")
-            .attr("dy", 4)
-            .text(d => d.id);
+      node.append("text")
+          .attr("dy", 4)
+          .text(d => d.id + d.frequency);
 
-        const simulation = d3.forceSimulation(nodes)
-            .force("link", d3.forceLink(links).id(d => d.id).distance(100))
-            .force("charge", d3.forceManyBody().strength(-300))
-            .force("center", d3.forceCenter(width / 2, height / 2));
-        simulation.on("tick", () => {
-            link.attr("d", d => {
-                const matchingLink = links.find(l => l.source.id === d.target.id && l.target.id === d.source.id);
-                if (matchingLink) {
-                    const dx = d.target.x - d.source.x;
-                    const dy = d.target.y - d.source.y;
-                    const dr = Math.sqrt(dx * dx + dy * dy);
-                    return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
-                } else {
-                    return `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`;
-                }
-            });
+      const simulation = d3.forceSimulation(nodes)
+          .force("link", d3.forceLink(links).id(d => d.id).distance(100))
+          .force("charge", d3.forceManyBody().strength(-300))
+          .force("center", d3.forceCenter(width / 2, height / 2));
+      simulation.on("tick", () => {
+          link.attr("d", d => {
+              const matchingLink = links.find(l => l.source.id === d.target.id && l.target.id === d.source.id);
+              if (matchingLink) {
+                  const dx = d.target.x - d.source.x;
+                  const dy = d.target.y - d.source.y;
+                  const dr = Math.sqrt(dx * dx + dy * dy);
+                  return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+              } else {
+                  return `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`;
+              }
+          });
 
-            node.attr("transform", d => `translate(${d.x},${d.y})`);
+          node.attr("transform", d => `translate(${d.x},${d.y})`);
 
-            linkLabels
-                .attr("x", d => {
-                    const dx = d.target.x - d.source.x;
-                    const dy = d.target.y - d.source.y;
-                    const dr = Math.sqrt(dx * dx + dy * dy);
-                    const midX = (d.source.x + d.target.x) / 2;
-                    const midY = (d.source.y + d.target.y) / 2;
-                    const offsetX = dy / dr * 15;
-                    return midX + offsetX;
-                })
-                .attr("y", d => {
-                    const dx = d.target.x - d.source.x;
-                    const dy = d.target.y - d.source.y;
-                    const dr = Math.sqrt(dx * dx + dy * dy);
-                    const midX = (d.source.x + d.target.x) / 2;
-                    const midY = (d.source.y + d.target.y) / 2;
-                    const offsetY = -dx / dr * 15;
-                    return midY + offsetY;
-                });
-        });
+          linkLabels
+              .attr("x", d => {
+                  const dx = d.target.x - d.source.x;
+                  const dy = d.target.y - d.source.y;
+                  const dr = Math.sqrt(dx * dx + dy * dy);
+                  const midX = (d.source.x + d.target.x) / 2;
+                  const midY = (d.source.y + d.target.y) / 2;
+                  const offsetX = dy / dr * 15;
+                  return midX + offsetX;
+              })
+              .attr("y", d => {
+                  const dx = d.target.x - d.source.x;
+                  const dy = d.target.y - d.source.y;
+                  const dr = Math.sqrt(dx * dx + dy * dy);
+                  const midX = (d.source.x + d.target.x) / 2;
+                  const midY = (d.source.y + d.target.y) / 2;
+                  const offsetY = -dx / dr * 15;
+                  return midY + offsetY;
+              });
+      });
 
-        function dragstarted(event, d) {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            d.fx = d.x;
-            d.fy = d.y;
-        }
+      function dragstarted(event, d) {
+          if (!event.active) simulation.alphaTarget(0.3).restart();
+          d.fx = d.x;
+          d.fy = d.y;
+      }
 
-        function dragged(event, d) {
-            d.fx = event.x;
-            d.fy = event.y;
-        }
+      function dragged(event, d) {
+          d.fx = event.x;
+          d.fy = event.y;
+      }
 
-        function dragended(event, d) {
-            if (!event.active) simulation.alphaTarget(0);
-            d.fx = d.x;
-            d.fy = d.y;
-        }
+      function dragended(event, d) {
+          if (!event.active) simulation.alphaTarget(0);
+          d.fx = d.x;
+          d.fy = d.y;
+      }
     </script>
-</body>
+  </body>
 </html>
