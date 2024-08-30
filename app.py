@@ -113,15 +113,23 @@ def petri_net(filename):
 def petri_net2(filename):
     log = pm4py.read_xes(path + filename)
     net, initial_marking, final_marking = pm4py.discover_petri_net_inductive(log)
-    places = [{"id": place.name} for place in net.places]
+    places = []
+    for place in net.places:
+        if place.name == 'source':
+            places.append({"id": 'START'})
+        elif place.name == 'sink':
+            places.append({"id": 'END'})
+        else:
+            places.append({"id": place.name})
+
     transitions = []
     for trans in net.transitions:
         if trans.label is None:
-            transitions.append({"id": trans.name})
+            transitions.append({"id": "empty" + trans.name})
         else:
             transitions.append({"id": trans.label})
 
-    print((transitions))
+
     Transition = type(list(net.transitions)[0])
     arcs = []
     for arc in net.arcs:
@@ -134,10 +142,21 @@ def petri_net2(filename):
             t = arc.target.label
         else:
             t = arc.target.name
+
         if s is None:
-            s = arc.source.name
+            s = "empty" + arc.source.name
         if t is None:
-            t = arc.target.name
+            t = "empty" + arc.target.name
+
+        if s == 'source':
+            s = 'START'
+        elif s == 'sink':
+            s = 'END'
+        if t == 'source':
+            t = 'START'
+        elif t == 'sink':
+            t = 'END'
+
         arcs.append({"source": s, "target": t})
 
     return render_template('PetriNet.html', filename=filename, places=places, transitions=transitions, arcs=arcs)
