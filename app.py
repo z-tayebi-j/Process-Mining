@@ -89,8 +89,14 @@ def dfg2(filename):
             node_ids.add(link['target'])
 
     for id in node_ids:
-        print(id)
-        nodes.append({"id": id})
+        if id == 'START' or id == 'END':
+            nodes.append({"id": id, "frequency": ""})
+        else:
+            frequency = start_activities.get(id, 0) + end_activities.get(id, 0) + sum(
+                freq for (src, tgt), freq in dfg.items() if src == id or tgt == id)
+            nodes.append({"id": id, "frequency": f" ({frequency // 2})"})
+    for n in nodes:
+        print(n)
 
     return render_template('DFG.html', filename=filename, nodes=nodes, links=links)
 
@@ -98,9 +104,43 @@ def dfg2(filename):
 @app.route('/petri_net/<filename>')
 def petri_net(filename):
     log = pm4py.read_xes(path + filename)
-    petri, start_activities, end_activities = pm4py.discover_petri_net_heuristics(log)
+    petri, start_activities, end_activities = pm4py.discover_petri_net_inductive(log)
     pm4py.save_vis_petri_net(petri, start_activities, end_activities, path + "petrinet.png")
-    return redirect(url_for('display_image', filename="petrinet.png"))
+    return render_template('display_petri.html', filename="petrinet.png", dataset=filename)
+
+
+@app.route('/petri_net2/<filename>')
+def petri_net2(filename):
+    log = pm4py.read_xes(path + filename)
+    net, initial_marking, final_marking = pm4py.discover_petri_net_inductive(log)
+    places = [{"id": place.name} for place in net.places]
+    transitions = []
+    for trans in net.transitions:
+        if trans.label is None:
+            transitions.append({"id": trans.name})
+        else:
+            transitions.append({"id": trans.label})
+
+    print((transitions))
+    Transition = type(list(net.transitions)[0])
+    arcs = []
+    for arc in net.arcs:
+        if isinstance(arc.source, Transition):
+            s = arc.source.label
+        else:
+            s = arc.source.name
+
+        if isinstance(arc.target, Transition):
+            t = arc.target.label
+        else:
+            t = arc.target.name
+        if s is None:
+            s = arc.source.name
+        if t is None:
+            t = arc.target.name
+        arcs.append({"source": s, "target": t})
+
+    return render_template('PetriNet.html', filename=filename, places=places, transitions=transitions, arcs=arcs)
 
 
 @app.route('/bpmn/<filename>')
@@ -109,43 +149,6 @@ def bpmn(filename):
     bpmn = pm4py.discover_bpmn_inductive(log)
     pm4py.save_vis_bpmn(bpmn, path + "bpmn.png")
     return redirect(url_for('display_image', filename="bpmn.png"))
-
-
-@app.route('/petri_net_data/<filename>')
-def petri_net_data(filename):
-    log = pm4py.read_xes(path + filename)
-    petri, start_activities, end_activities = pm4py.discover_petri_net_heuristics(log)
-
-    places = []
-    for place in petri.places:
-        places.append({
-            'id': place.name,
-            'cx': 0,
-            'cy': 0
-        })
-
-    transitions = []
-    for transition in petri.transitions:
-        transitions.append({
-            'id': transition.name,
-            'x': 0,
-            'y': 0,
-            'type': 'filled' if transition.label else 'empty'
-        })
-
-    arcs = []
-    for arc in petri.arcs:
-        arcs.append({
-            'source': arc.source.name,
-            'target': arc.target.name
-        })
-
-    return jsonify({'places': places, 'transitions': transitions, 'arcs': arcs})
-
-
-@app.route('/petri_net2/<filename>')
-def petri_net2(filename):
-    return render_template('PetriNet.html', filename=filename)
 
 
 if __name__ == '__main__':
