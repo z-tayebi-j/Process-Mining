@@ -16,19 +16,19 @@
             background-size: cover;
             background-image: url("../static/images/bg.jfif");
         }
-      button {
-        font-family: Courier;
-        background-color: #6f0e83;
-        color: #ffffff;
-        border: none;
-        padding: 10px 20px;
-        margin-top: 5%;
-        cursor: pointer;
-        margin-bottom: 20px;
-        font-size: 16px;
-        border-radius: 8px;
-        transition: background-color 0.3s ease;
-      }
+        button {
+            font-family: Courier;
+            background-color: #6f0e83;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 5%;
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
         .node rect {
             fill: #dbc4ff;
             stroke: #000;
@@ -59,20 +59,26 @@
 
         .link {
             fill: none;
-            stroke: #000000; /* رنگ مشکی برای یال‌ها */
+            stroke: #000000; 
             stroke-opacity: 0.6;
             stroke-width: 2;
             marker-end: url(#arrow);
         }
-      .start-node circle {
-        fill: #8459d8;
-        stroke: #000;
-      }
-
-      .end-node circle {
-        fill: #8459d8;
-        stroke: #000;
-      }
+        .link.highlight {
+            stroke: #fffc34;
+        }
+        .node.highlighted {
+            fill: #fffc34 !important;
+            stroke-width: 2px;
+        }
+         .node.highlight {
+            fill: #fffc34 !important;
+            stroke-width: 2px;
+        }
+        .highlighted {
+            fill: #fffc34 !important;
+            stroke-width: 2px;
+        }
     </style>
 </head>
 <body>
@@ -118,21 +124,21 @@
         .selectAll("g")
         .data(nodes)
         .enter().append("g")
-        .attr("class", "node")
         .attr("class", d => {
-              if (d.data === 'start') return "node start-node";
-              if (d.data === 'end') return "node end-node";
-              return "node";
-          })
+            if (d.data === 'start') return "node start-node";
+            if (d.data === 'end') return "node end-node";
+            return "node";
+        })
         .call(d3.drag()
             .on("start", dragstarted)
             .on("drag", dragged)
-            .on("end", dragended));
+            .on("end", dragended))
+        .on("mouseover", mouseover)
+        .on("mouseout", mouseout);
 
-    // اضافه کردن اشکال به گره‌ها بر اساس نوع آنها
     node.filter(d => d.data === 'start' || d.data === 'end')
         .append("circle")
-        .attr("r", 30); // اندازه دایره
+        .attr("r", 30);
 
     node.filter(d => d.type === 'gateway')
         .append("polygon")
@@ -152,7 +158,7 @@
         .attr("x", -65)
         .attr("y", -32)
         .attr("width", 130)
-        .attr("height", 64)
+        .attr("height", 64);
 
     node.append("text")
         .attr("dy", 4)
@@ -182,8 +188,27 @@
 
     function dragended(event, d) {
         if (!event.active) simulation.alphaTarget(0);
-        d.fx = d.x;  // ثابت کردن موقعیت عنصر
-        d.fy = d.y;  // ثابت کردن موقعیت عنصر
+        d.fx = d.x;
+        d.fy = d.y;
+    }
+
+    function mouseover(event, d) {
+        d3.select(this).select("circle, rect, polygon").classed("highlighted", true);
+        node.selectAll("circle, rect, polygon")
+                  .filter(n => links.some(l => (l.source.id === d.id && l.target.id === n.id) || (l.source.id === n.id && l.target.id === d.id)))
+                  .classed("highlighted", true);
+
+        link.filter(l => l.source === d || l.target === d)
+            .attr("class", "link highlight");
+    }
+
+    function mouseout(event, d) {
+        d3.select(this).select("circle, rect").classed("highlighted", false);
+        node.selectAll("circle, rect, polygon")
+              .filter(n => links.some(l => (l.source.id === d.id && l.target.id === n.id) || (l.source.id === n.id && l.target.id === d.id)))
+              .classed("highlighted", false);
+
+        link.attr("class", "link");
     }
 </script>
 </body>
