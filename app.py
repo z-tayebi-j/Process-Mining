@@ -174,11 +174,28 @@ def bpmn2(filename):
     print('hi')
     log = pm4py.read_xes(path + filename)
     bpmn = pm4py.discover_bpmn_inductive(log)
+
+    nodes = []
+    links = []
+
     for element in bpmn.get_graph().nodes:
-        print(element)
-        print(type(element))
-        # print(bpmn.get_graph().nodes[element]['type'])
-    pm4py.save_vis_bpmn(bpmn, path + "bpmn.png")
+        print(str(type(element)))
+        id = str(element)
+        if id.split('@')[1] == '':
+            type1 = 'gateway'
+            if str(type(element)) == "<class 'pm4py.objects.bpmn.obj.BPMN.ExclusiveGateway'>":
+                text = 'X'
+            else:
+                text = '+'
+        else:
+            type1 = 'node'
+            text = (id.split('@'))[1]
+        nodes.append({"id": id, "type": type1, "data": text})
+        print(id + "-----" + type1)
+
+    for edge in bpmn.get_graph().edges:
+        source, target, data = edge
+        links.append({"source": str(source), "target": str(target)})
     return render_template('BPMN.html', filename=filename, nodes=nodes, links=links)
 
 

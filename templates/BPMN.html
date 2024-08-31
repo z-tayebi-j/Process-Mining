@@ -2,9 +2,189 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>BPMN Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            flex-direction: column;
+            background-size: cover;
+            background-image: url("../static/images/bg.jfif");
+        }
+      button {
+        font-family: Courier;
+        background-color: #6f0e83;
+        color: #ffffff;
+        border: none;
+        padding: 10px 20px;
+        margin-top: 5%;
+        cursor: pointer;
+        margin-bottom: 20px;
+        font-size: 16px;
+        border-radius: 8px;
+        transition: background-color 0.3s ease;
+      }
+        .node rect {
+            fill: #dbc4ff;
+            stroke: #000;
+            stroke-width: 1.5px;
+            cursor: pointer;
+        }
+
+        .node polygon {
+            fill: #fffec2;
+            stroke: #000;
+            stroke-width: 1.5px;
+            cursor: pointer;
+        }
+
+        .node circle {
+            fill: #69b3a2;
+            stroke: #000;
+            stroke-width: 1.5px;
+            cursor: pointer;
+        }
+
+        .node text {
+            font: 14px Candara;
+            text-anchor: middle;
+            fill: #000000;
+            pointer-events: none;
+        }
+
+        .link {
+            fill: none;
+            stroke: #000000; /* رنگ مشکی برای یال‌ها */
+            stroke-opacity: 0.6;
+            stroke-width: 2;
+            marker-end: url(#arrow);
+        }
+      .start-node circle {
+        fill: #8459d8;
+        stroke: #000;
+      }
+
+      .end-node circle {
+        fill: #8459d8;
+        stroke: #000;
+      }
+    </style>
 </head>
 <body>
 
+<svg width="1400" height="800"></svg>
+<button onclick="location.href='/'">Back</button>
+<script>
+    const nodes = {{ nodes | tojson }};
+    const links = {{ links | tojson }};
+
+    const svg = d3.select("svg"),
+        width = +svg.attr("width"),
+        height = +svg.attr("height");
+
+    svg.append("defs").selectAll("marker")
+        .data(["arrow", "arrow-highlight"])
+        .enter().append("marker")
+        .attr("id", d => d)
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 70)
+        .attr("refY", 0)
+        .attr("markerWidth", 6)
+        .attr("markerHeight", 6)
+        .attr("orient", "auto")
+        .append("path")
+        .attr("d", "M0,-5L10,0L0,5")
+        .attr("fill", d => d === "arrow" ? "#000" : "#fffc34");
+
+    const link = svg.append("g")
+        .selectAll("path")
+        .data(links)
+        .enter().append("path")
+        .attr("class", "link");
+
+    const linkHighlight = svg.append("g")
+        .selectAll("path")
+        .data(links)
+        .enter().append("path")
+        .attr("class", "link-highlight");
+
+    const node = svg.append("g")
+        .attr("class", "nodes")
+        .selectAll("g")
+        .data(nodes)
+        .enter().append("g")
+        .attr("class", "node")
+        .attr("class", d => {
+              if (d.data === 'start') return "node start-node";
+              if (d.data === 'end') return "node end-node";
+              return "node";
+          })
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended));
+
+    // اضافه کردن اشکال به گره‌ها بر اساس نوع آنها
+    node.filter(d => d.data === 'start' || d.data === 'end')
+        .append("circle")
+        .attr("r", 30); // اندازه دایره
+
+    node.filter(d => d.type === 'gateway')
+        .append("polygon")
+        .attr("points", d => {
+            const size = 30;
+            const angle = Math.PI / 4;
+            return [
+                [0, -size].join(","),
+                [size * Math.cos(angle), 0].join(","),
+                [0, size].join(","),
+                [-size * Math.cos(angle), 0].join(",")
+            ].join(" ");
+        });
+
+    node.filter(d => d.data !== 'start' && d.data !== 'end' && d.type !== 'gateway')
+        .append("rect")
+        .attr("x", -65)
+        .attr("y", -32)
+        .attr("width", 130)
+        .attr("height", 64)
+
+    node.append("text")
+        .attr("dy", 4)
+        .text(d => d.data);
+
+    const simulation = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id(d => d.id).distance(100))
+        .force("charge", d3.forceManyBody().strength(-100))
+        .force("center", d3.forceCenter(width / 2, height / 2));
+
+    simulation.on("tick", () => {
+        link.attr("d", d => `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`);
+        linkHighlight.attr("d", d => `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`);
+        node.attr("transform", d => `translate(${d.x},${d.y})`);
+    });
+
+    function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+    }
+
+    function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+    }
+
+    function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = d.x;  // ثابت کردن موقعیت عنصر
+        d.fy = d.y;  // ثابت کردن موقعیت عنصر
+    }
+</script>
 </body>
 </html>
