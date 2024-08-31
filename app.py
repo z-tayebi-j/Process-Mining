@@ -129,7 +129,6 @@ def petri_net2(filename):
         else:
             transitions.append({"id": trans.label})
 
-
     Transition = type(list(net.transitions)[0])
     arcs = []
     for arc in net.arcs:
@@ -167,7 +166,20 @@ def bpmn(filename):
     log = pm4py.read_xes(path + filename)
     bpmn = pm4py.discover_bpmn_inductive(log)
     pm4py.save_vis_bpmn(bpmn, path + "bpmn.png")
-    return redirect(url_for('display_image', filename="bpmn.png"))
+    return render_template('display_bpmn.html', filename="bpmn.png", dataset=filename)
+
+
+@app.route('/bpmn2/<filename>')
+def bpmn2(filename):
+    print('hi')
+    log = pm4py.read_xes(path + filename)
+    bpmn = pm4py.discover_bpmn_inductive(log)
+    for element in bpmn.get_graph().nodes:
+        print(element)
+        print(type(element))
+        # print(bpmn.get_graph().nodes[element]['type'])
+    pm4py.save_vis_bpmn(bpmn, path + "bpmn.png")
+    return render_template('BPMN.html', filename=filename, nodes=nodes, links=links)
 
 
 if __name__ == '__main__':
